@@ -1,13 +1,13 @@
 # 🧬 Protein Folding Drug Target Finder
 
-> A local, GPU-accelerated drug discovery pipeline. Feed it a raw protein sequence — it spits out a ranked list of drug candidates with binding scores and 3D visualizations. No cloud. No subscription. Just your RTX GPU doing real computational biology.
+> A local, GPU-accelerated drug discovery pipeline. Feed it a raw protein sequence it spits out a ranked list of drug candidates with binding scores and 3D visualizations. No cloud. No subscription. Just your RTX GPU doing real computational biology.
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [What This Does](#what-this-does)
-- [Results — KRAS G12D](#results--kras-g12d)
+- [Results  KRAS G12D](#results--kras-g12d)
 - [Architecture & Data Flow](#architecture--data-flow)
 - [Pipeline Phases](#pipeline-phases)
 - [Technical Decisions](#technical-decisions)
@@ -35,22 +35,22 @@ The result: a ranked list of potential drug candidates for any protein target, p
 
 ---
 
-## Results — KRAS G12D
+## Results  KRAS G12D
 
-> Target: **KRAS G12D** — the most common oncogenic mutation in human cancer (pancreatic, colorectal, lung). Historically called "undruggable" until Sotorasib (AMG-510) received FDA approval in 2021.
+> Target: **KRAS G12D** : the most common oncogenic mutation in human cancer (pancreatic, colorectal, lung). Historically called "undruggable" until Sotorasib (AMG-510) received FDA approval in 2021.
 
 | Metric | Value |
 |---|---|
 | Protein residues | 189 |
 | Binding pockets detected | 19 |
-| Best pocket druggability | 0.284 (expected low — KRAS is notoriously difficult) |
+| Best pocket druggability | 0.284 (expected low  KRAS is notoriously difficult) |
 | Pocket center | (-9.341, 2.976, -11.641) Å |
 | Ligands screened | 28 |
 | Docking time | **34 seconds** on RTX 3050 |
 | Hits identified (< -7 kcal/mol) | **16 / 28** |
 | Top candidate | **AMG_510_analog** at **-8.72 kcal/mol** |
 
-The top hit, AMG_510_analog, belongs to the same scaffold class as **Sotorasib** — an FDA-approved KRAS inhibitor. The pipeline independently ranked it #1, validating the docking setup against known biology.
+The top hit, AMG_510_analog, belongs to the same scaffold class as **Sotorasib** an FDA-approved KRAS inhibitor. The pipeline independently ranked it #1, validating the docking setup against known biology.
 
 ### Top 10 Candidates
 
@@ -120,21 +120,21 @@ FASTA sequence
 
 ---
 
-### Phase 1 — Protein Folding (AlphaFold2)
+### Phase 1  Protein Folding (AlphaFold2)
 
 AlphaFold2 uses the **Evoformer** transformer architecture to predict 3D atomic coordinates directly from an amino acid sequence, using evolutionary information from thousands of related proteins (Multiple Sequence Alignment).
 
-ColabFold wraps AlphaFold2 with MMseqs2 for fast remote MSA — avoiding the 2TB genetic database download while running inference locally on your GPU.
+ColabFold wraps AlphaFold2 with MMseqs2 for fast remote MSA  avoiding the 2TB genetic database download while running inference locally on your GPU.
 
 **Output: pLDDT confidence plot**
 
 ![pLDDT confidence plot](outputs/kras_plddt.png)
 
-> Green regions (pLDDT > 70) are reliable for docking. Pink regions are disordered loops — we avoid placing the docking box here. The structured catalytic core of KRAS (residues ~1–170) shows good confidence.
+> Green regions (pLDDT > 70) are reliable for docking. Pink regions are disordered loops  we avoid placing the docking box here. The structured catalytic core of KRAS (residues ~1–170) shows good confidence.
 
 ---
 
-### Phase 2 — Binding Site Detection (fpocket)
+### Phase 2  Binding Site Detection (fpocket)
 
 fpocket uses **Voronoi tessellation** to find cavities on the protein surface. It places alpha spheres between atoms and identifies clusters of the right size and shape to bind a drug molecule. Each pocket gets a druggability score (0–1) from a trained ML model.
 
@@ -142,7 +142,7 @@ fpocket uses **Voronoi tessellation** to find cavities on the protein surface. I
 
 ![fpocket druggability analysis](outputs/pocket_analysis.png)
 
-> **Pocket 3 selected** — best druggability score of 0.284, volume 544 Å³, center at (-9.341, 2.976, -11.641). The low druggability score is expected: KRAS's switch II pocket is shallow and only partially open in the AlphaFold structure. The real G12C mutant structure has a deeper, more accessible cavity — this is consistent with the published literature.
+> **Pocket 3 selected**  best druggability score of 0.284, volume 544 Å³, center at (-9.341, 2.976, -11.641). The low druggability score is expected: KRAS's switch II pocket is shallow and only partially open in the AlphaFold structure. The real G12C mutant structure has a deeper, more accessible cavity  this is consistent with the published literature.
 
 **Key numbers:**
 ```
@@ -153,37 +153,37 @@ Center         : (-9.341, 2.976, -11.641)
 Grid box       : 40 × 40 × 40 points at 0.375 Å spacing
 ```
 
-**Druggability vs Score — what's the difference?**
-- **Score**: raw geometric quality — how well-defined the cavity is
+**Druggability vs Score  what's the difference?**
+- **Score**: raw geometric quality  how well-defined the cavity is
 - **Druggability (0–1)**: ML-predicted probability that a drug-like molecule can bind there. A wide-open groove may score well geometrically but still be undruggable. Always rank by druggability.
 
 ---
 
-### Phase 3 — Ligand Library Preparation (RDKit)
+### Phase 3  Ligand Library Preparation (RDKit)
 
 28 KRAS-relevant molecules were prepared from SMILES strings using RDKit:
 
-1. **Lipinski Rule of Five filter** — MW < 500, HBD ≤ 5, HBA ≤ 10, LogP ≤ 5
-2. **PAINS filter** — removes pan-assay interference compounds that give false positives
-3. **3D conformer generation** — ETKDGv3 distance geometry
-4. **MMFF energy minimization** — Merck Molecular Force Field geometry optimization
-5. **PDBQT conversion** — Open Babel adds Gasteiger partial charges for AutoDock
+1. **Lipinski Rule of Five filter**  MW < 500, HBD ≤ 5, HBA ≤ 10, LogP ≤ 5
+2. **PAINS filter**  removes pan-assay interference compounds that give false positives
+3. **3D conformer generation**  ETKDGv3 distance geometry
+4. **MMFF energy minimization**  Merck Molecular Force Field geometry optimization
+5. **PDBQT conversion**  Open Babel adds Gasteiger partial charges for AutoDock
 
 **Output: Library property distributions**
 
 ![Ligand property distributions](outputs/phase3/ligand_property_distributions.png)
 
-> All 28 molecules are well inside Lipinski space. MW median 228 Da, LogP median 2.5, TPSA median 46 Å² — ideal oral drug profile. Low rotatable bond count (median 2) is appropriate for KRAS's rigid binding pocket.
+> All 28 molecules are well inside Lipinski space. MW median 228 Da, LogP median 2.5, TPSA median 46 Å²  ideal oral drug profile. Low rotatable bond count (median 2) is appropriate for KRAS's rigid binding pocket.
 
 ---
 
-### Phase 4 — Molecular Docking (AutoDock-GPU)
+### Phase 4  Molecular Docking (AutoDock-GPU)
 
-AutoDock-GPU parallelizes the **genetic algorithm** pose search across thousands of CUDA cores simultaneously. Each ligand gets 20 independent runs — the best binding energy across all runs is reported.
+AutoDock-GPU parallelizes the **genetic algorithm** pose search across thousands of CUDA cores simultaneously. Each ligand gets 20 independent runs  the best binding energy across all runs is reported.
 
-The grid maps are pre-computed by AutoGrid4 for each atom type in the system, so during docking the algorithm just looks up pre-computed energies instead of calculating from scratch — this is why it's so fast.
+The grid maps are pre-computed by AutoGrid4 for each atom type in the system, so during docking the algorithm just looks up pre-computed energies instead of calculating from scratch  this is why it's so fast.
 
-**Docking run — 28 ligands in 34 seconds:**
+**Docking run  28 ligands in 34 seconds:**
 
 ![Docking run output](outputs/docking_run.png)
 
@@ -191,30 +191,30 @@ The grid maps are pre-computed by AutoGrid4 for each atom type in the system, so
 
 ![Docking results plots](outputs/docking_results.png)
 
-> Left: clear hit/weak separation at -7 kcal/mol. Centre: hits cluster at MW 200–310 Da — ideal oral range. Right: all hits have ligand efficiency < -0.35 kcal/mol/heavy atom — good efficiency across the board.
+> Left: clear hit/weak separation at -7 kcal/mol. Centre: hits cluster at MW 200–310 Da  ideal oral range. Right: all hits have ligand efficiency < -0.35 kcal/mol/heavy atom  good efficiency across the board.
 
 **Binding energy reference:**
 
 | Energy | Interpretation |
 |---|---|
-| > -5 kcal/mol | Weak — unlikely drug candidate |
-| -5 to -7 kcal/mol | Moderate — worth investigating |
-| -7 to -9 kcal/mol | **Strong — good drug candidate** |
-| < -9 kcal/mol | Excellent — high priority hit |
+| > -5 kcal/mol | Weak  unlikely drug candidate |
+| -5 to -7 kcal/mol | Moderate  worth investigating |
+| -7 to -9 kcal/mol | **Strong  good drug candidate** |
+| < -9 kcal/mol | Excellent  high priority hit |
 
 ---
 
-### Phase 5 — Results & Web UI (Gradio + 3Dmol.js)
+### Phase 5  Results & Web UI (Gradio + 3Dmol.js)
 
 The Gradio web app wraps the entire pipeline with:
-- **Live streaming output** — see ColabFold recycle iterations and docking scores in real time
-- **Interactive results table** — sortable ranked candidate list
-- **3Dmol.js 3D viewer** — WebGL rendering of any ligand docked inside the protein pocket
-- **Binding energy plots** — distribution, MW vs energy, ligand efficiency
+- **Live streaming output**  see ColabFold recycle iterations and docking scores in real time
+- **Interactive results table**  sortable ranked candidate list
+- **3Dmol.js 3D viewer**  WebGL rendering of any ligand docked inside the protein pocket
+- **Binding energy plots**  distribution, MW vs energy, ligand efficiency
 
 **Summary:**
 
-> Folded KRAS G12D (189 residues) with AlphaFold2, detected 19 binding pockets with fpocket (best druggability 0.284 — consistent with KRAS's historically difficult target profile), screened 28 drug-like ligands with AutoDock-GPU in **34 seconds**, identified **16 hits** below -7 kcal/mol. Top candidate **AMG_510_analog** (-8.72 kcal/mol, MW 303 Da, LogP 4.01) matches the scaffold class of Sotorasib, an FDA-approved KRAS inhibitor.
+> Folded KRAS G12D (189 residues) with AlphaFold2, detected 19 binding pockets with fpocket (best druggability 0.284  consistent with KRAS's historically difficult target profile), screened 28 drug-like ligands with AutoDock-GPU in **34 seconds**, identified **16 hits** below -7 kcal/mol. Top candidate **AMG_510_analog** (-8.72 kcal/mol, MW 303 Da, LogP 4.01) matches the scaffold class of Sotorasib, an FDA-approved KRAS inhibitor.
 
 ---
 
@@ -223,7 +223,7 @@ The Gradio web app wraps the entire pipeline with:
 | Decision | Rationale |
 |---|---|
 | **ColabFold over raw AlphaFold2** | Avoids the 2TB genetic database download. Uses MMseqs2 remotely for MSA, runs inference locally on GPU. Saves days of setup. |
-| **KRAS G12D as target** | Historically "undruggable" — makes it a more impressive target. FDA approval of Sotorasib (2021) proves it's possible and gives a known benchmark to validate against. |
+| **KRAS G12D as target** | Historically "undruggable"  makes it a more impressive target. FDA approval of Sotorasib (2021) proves it's possible and gives a known benchmark to validate against. |
 | **fpocket over SiteMap/DoGSiteScorer** | Open-source, CLI-based, scriptable, no license. Voronoi + alpha spheres is battle-tested in the literature. |
 | **AutoDock-GPU over Vina** | Vina is single-threaded CPU. AutoDock-GPU parallelizes across CUDA cores giving 10–100× speedup for library screening. |
 | **RDKit over OpenEye/Schrödinger** | Free, Python-native, industry standard for open-source cheminformatics. |
@@ -357,7 +357,7 @@ pip install gradio pandas matplotlib seaborn numpy biopython
 
 ## Running the Pipeline
 
-### Option A — Gradio Web UI (recommended)
+### Option A  Gradio Web UI (recommended)
 ```bash
 python app/gradio_app.py
 # Open http://localhost:7860
@@ -365,7 +365,7 @@ python app/gradio_app.py
 # Watch live output stream → view results + 3D poses
 ```
 
-### Option B — Manual stage by stage
+### Option B  Manual stage by stage
 ```bash
 # Stage 1: Fold protein
 colabfold_batch --num-recycle 3 --model-type alphafold2_ptm --use-gpu \
@@ -393,13 +393,13 @@ python scripts/05_parse_results.py
 
 | Risk | Mitigation |
 |---|---|
-| AutoDock-GPU compilation fails | Must match GPU SM version — rebuild with correct CUDA arch flags |
+| AutoDock-GPU compilation fails | Must match GPU SM version  rebuild with correct CUDA arch flags |
 | ColabFold silently falls back to CPU | Verify `jax.devices()` returns GPU before running |
 | Dependency conflicts (JAX vs NumPy) | Use pinned versions in `environment.yml` |
 | fpocket finds no pockets | Adjust `-m` (min alpha sphere radius) parameter |
 | AlphaFold structure has disordered loops | Use pLDDT > 70 regions only for pocket detection |
-| KRAS adopts closed conformation | Expected — switch II pocket is partially occluded in AlphaFold model |
-| Grid box too small for ligand | Use 40³ grid points at 0.375 Å (15 Å half-width) — validated against known KRAS inhibitors |
+| KRAS adopts closed conformation | Expected  switch II pocket is partially occluded in AlphaFold model |
+| Grid box too small for ligand | Use 40³ grid points at 0.375 Å (15 Å half-width)  validated against known KRAS inhibitors |
 | Atom type mismatch (Cl, F in ligands) | Explicitly add Cl and F to AutoGrid ligand_types |
 
 ---
@@ -410,7 +410,7 @@ python scripts/05_parse_results.py
 More negative = more thermodynamically stable binding = stronger drug effect. Think of it as a score where lower is better. Values below -7 kcal/mol are considered hits in virtual screening.
 
 **What is pLDDT?**
-AlphaFold2's per-residue confidence score (0–100). Above 70 = reliable for docking. Below 50 = disordered region — don't dock here.
+AlphaFold2's per-residue confidence score (0–100). Above 70 = reliable for docking. Below 50 = disordered region  don't dock here.
 
 **What is Lipinski's Rule of Five?**
 Empirical drug-likeness filter: MW < 500 Da, HBD ≤ 5, HBA ≤ 10, LogP ≤ 5. Molecules passing all rules are likely orally bioavailable.
@@ -422,11 +422,11 @@ AutoDock-GPU parallelizes the genetic algorithm population across thousands of C
 
 ## References
 
-- Jumper et al., 2021 — AlphaFold2 original paper (*Nature*)
-- Meng et al., 2011 — Molecular docking review (*Current Computer-Aided Drug Design*)
-- Lipinski et al., 1997 — Rule of Five (*Advanced Drug Delivery Reviews*)
-- Halgren, 1996 — MMFF force field (*Journal of Computational Chemistry*)
-- Sotorasib / AMG-510 — FDA approved May 2021 for KRAS G12C NSCLC
+- Jumper et al., 2021  AlphaFold2 original paper (*Nature*)
+- Meng et al., 2011  Molecular docking review (*Current Computer-Aided Drug Design*)
+- Lipinski et al., 1997  Rule of Five (*Advanced Drug Delivery Reviews*)
+- Halgren, 1996  MMFF force field (*Journal of Computational Chemistry*)
+- Sotorasib / AMG-510  FDA approved May 2021 for KRAS G12C NSCLC
 
 ---
 
