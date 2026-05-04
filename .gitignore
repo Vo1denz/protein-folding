@@ -1,0 +1,57 @@
+# ========================
+# DATA (ignore everything)
+# ========================
+data/
+outputs/
+
+# Allow only important outputs
+!data/results/
+!data/results/ranked_candidates.csv
+
+!data/inputs/
+!data/inputs/ligands/
+!data/inputs/ligands/prepared/
+!data/inputs/ligands/prepared/filtered_ligands.sdf
+
+
+# ========================
+# HEAVY TOOLS
+# ========================
+AutoDock-GPU/
+localcolabfold/
+
+
+# ========================
+# PYTHON
+# ========================
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+
+# ========================
+# BUILD FILES
+# ========================
+*.egg-info/
+dist/
+build/
+
+
+# ========================
+# JUPYTER
+# ========================
+.ipynb_checkpoints/
+
+
+# ========================
+# OS FILES
+# ========================
+.DS_Store
+Thumbs.db
+
+
+# ========================
+# GRADIO
+# ========================
+gradio_cached_examples/
