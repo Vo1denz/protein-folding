@@ -212,6 +212,11 @@ The Gradio web app wraps the entire pipeline with:
 - **3Dmol.js 3D viewer**  WebGL rendering of any ligand docked inside the protein pocket
 - **Binding energy plots**  distribution, MW vs energy, ligand efficiency
 
+
+**UI:**
+![UI1](outputs/phase5/1.png)
+![UI1](outputs/phase5/2.png)
+
 **Summary:**
 
 > Folded KRAS G12D (189 residues) with AlphaFold2, detected 19 binding pockets with fpocket (best druggability 0.284  consistent with KRAS's historically difficult target profile), screened 28 drug-like ligands with AutoDock-GPU in **34 seconds**, identified **16 hits** below -7 kcal/mol. Top candidate **AMG_510_analog** (-8.72 kcal/mol, MW 303 Da, LogP 4.01) matches the scaffold class of Sotorasib, an FDA-approved KRAS inhibitor.
